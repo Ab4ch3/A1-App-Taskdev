@@ -1,21 +1,26 @@
-import { baseEntity } from 'src/config/base.entity';
-import { IUser } from 'src/interfaces/user.interfaces';
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
+import { BaseEntity } from '../../config/base.entity';
+import { ROLES } from '../../constants/roles';
+import { IUser } from '../../interfaces/user.interfaces';
+import { UsersProjectsEntity } from './userProjects.entity';
 
 @Entity({ name: 'users' })
-export class UsersEntity extends baseEntity implements IUser {
+export class UsersEntity extends BaseEntity implements IUser {
   @Column()
   firstName: string;
   @Column()
   lastName: string;
   @Column()
   age: number;
-  @Column()
+  @Column({ unique: true })
   email: string;
-  @Column()
+  @Column({ unique: true })
   username: string;
   @Column()
   password: string;
-  @Column()
-  role: string;
+  @Column({ type: 'enum', enum: ROLES })
+  role: ROLES;
+
+  @OneToMany(() => UsersProjectsEntity, (usersProject) => usersProject.user)
+  projectsIncludes: UsersProjectsEntity[];
 }
