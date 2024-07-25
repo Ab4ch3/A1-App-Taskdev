@@ -1,26 +1,75 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
+import { UsersEntity } from '../entities/user.entity';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(
+    @InjectRepository(UsersEntity)
+    private readonly userRepository: Repository<UsersEntity>,
+  ) {}
+
+  async create(newUser: CreateUserDto): Promise<UsersEntity> {
+    try {
+      return await this.userRepository.save(newUser);
+    } catch (e) {
+      throw new Error(e);
+    }
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async findAll(): Promise<UsersEntity[]> {
+    try {
+      return await this.userRepository.find();
+    } catch (e) {
+      throw new Error(e);
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findUser(id: string): Promise<UsersEntity> {
+    try {
+      return this.userRepository
+        .createQueryBuilder('user')
+        .where({ id })
+        .getOne();
+    } catch (e) {
+      throw new Error(e);
+    }
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(
+    id: string,
+    updateUser: UpdateUserDto,
+  ): Promise<UpdateResult | undefined> {
+    try {
+      const user: UpdateResult = await this.userRepository.update(
+        id,
+        updateUser,
+      );
+
+      if (user.affected === 0) {
+        return undefined;
+      }
+
+      return user;
+    } catch (e) {
+      throw new Error(e);
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async delete(id: string) {
+    try {
+      const user = await this.userRepository.delete(id);
+
+      // if (user.deletedCount === 0) {
+      //   return undefined;
+      // }
+
+      return user;
+    } catch (e) {
+      throw new Error(e);
+    }
   }
 }
