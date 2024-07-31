@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, UpdateResult } from 'typeorm';
+import { ErrorManager } from 'src/utils/error.manager';
+import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { UsersEntity } from '../entities/user.entity';
@@ -16,26 +17,42 @@ export class UsersService {
     try {
       return await this.userRepository.save(newUser);
     } catch (e) {
-      throw new Error(e);
+      throw ErrorManager.createSignatureError(e.message);
     }
   }
 
   async findAll(): Promise<UsersEntity[]> {
     try {
-      return await this.userRepository.find();
+      const users: UsersEntity[] = await this.userRepository.find();
+
+      if (users.length === 0) {
+        throw new ErrorManager({
+          type: 'NOT_FOUND',
+          message: 'Not Found users',
+        });
+      }
+
+      return users;
     } catch (e) {
-      throw new Error(e);
+      throw ErrorManager.createSignatureError(e.message);
     }
   }
 
   async findUser(id: string): Promise<UsersEntity> {
     try {
-      return this.userRepository
+      const user = await this.userRepository
         .createQueryBuilder('user')
         .where({ id })
         .getOne();
+      if (!user) {
+        throw new ErrorManager({
+          type: 'NOT_FOUND',
+          message: 'Not Found user',
+        });
+      }
+      return user;
     } catch (e) {
-      throw new Error(e);
+      throw ErrorManager.createSignatureError(e.message);
     }
   }
 
@@ -50,26 +67,32 @@ export class UsersService {
       );
 
       if (user.affected === 0) {
-        return undefined;
+        throw new ErrorManager({
+          type: 'BAD_REQUEST',
+          message: 'Not Updated user',
+        });
       }
 
       return user;
     } catch (e) {
-      throw new Error(e);
+      throw ErrorManager.createSignatureError(e.message);
     }
   }
 
-  async delete(id: string) {
+  async delete(id: string): Promise<DeleteResult | undefined> {
     try {
-      const user = await this.userRepository.delete(id);
+      const user: DeleteResult = await this.userRepository.delete(id);
 
-      // if (user.deletedCount === 0) {
-      //   return undefined;
-      // }
+      if (user.affected === 0) {
+        throw new ErrorManager({
+          type: 'BAD_REQUEST',
+          message: 'Not Delete user',
+        });
+      }
 
       return user;
     } catch (e) {
-      throw new Error(e);
+      throw ErrorManager.createSignatureError(e.message);
     }
   }
 }
