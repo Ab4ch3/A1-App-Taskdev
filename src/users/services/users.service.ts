@@ -4,18 +4,30 @@ import { ErrorManager } from 'src/utils/error.manager';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
+import { UserToProjectDTO } from '../dto/userToProject.dto';
 import { UsersEntity } from '../entities/user.entity';
+import { UsersProjectsEntity } from '../entities/userProjects.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(UsersEntity)
     private readonly userRepository: Repository<UsersEntity>,
+    @InjectRepository(UsersProjectsEntity)
+    private readonly userProjectRepository: Repository<UsersProjectsEntity>,
   ) {}
 
   async create(newUser: CreateUserDto): Promise<UsersEntity> {
     try {
       return await this.userRepository.save(newUser);
+    } catch (e) {
+      throw ErrorManager.createSignatureError(e.message);
+    }
+  }
+
+  async joinToProject(user: UserToProjectDTO) {
+    try {
+      return await this.userProjectRepository.save(user);
     } catch (e) {
       throw ErrorManager.createSignatureError(e.message);
     }
@@ -43,6 +55,8 @@ export class UsersService {
       const user = await this.userRepository
         .createQueryBuilder('user')
         .where({ id })
+        .leftJoinAndSelect('user.projectsIncludes', 'projectsIncludes')
+        .leftJoinAndSelect('projectsIncludes.project', 'project')
         .getOne();
       if (!user) {
         throw new ErrorManager({

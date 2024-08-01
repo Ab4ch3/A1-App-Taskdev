@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserToProjectDTO } from './dto/userToProject.dto';
 import { UsersService } from './services/users.service';
 
 @Controller('users')
@@ -18,6 +19,10 @@ export class UsersController {
   @Post()
   create(@Body() newUser: CreateUserDto) {
     return this.usersService.create(newUser);
+  }
+  @Post('add-to-project')
+  addToProject(@Body() user: UserToProjectDTO) {
+    return this.usersService.joinToProject(user);
   }
 
   @Get()
