@@ -6,13 +6,17 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
+import { PublicAccess } from 'src/auth/decorators/public.decorator';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserToProjectDTO } from './dto/userToProject.dto';
 import { UsersService } from './services/users.service';
 
 @Controller('users')
+@UseGuards(AuthGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -30,6 +34,7 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  @PublicAccess()
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.usersService.findUser(id);

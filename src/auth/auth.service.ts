@@ -44,6 +44,11 @@ export class AuthService {
     return null;
   }
 
+  /**
+   *
+   * @param param0
+   * @returns
+   */
   public async singJWT({
     payload,
     secrect,
@@ -56,6 +61,11 @@ export class AuthService {
     return jwt.sign(payload, secrect, { expiresIn: expires });
   }
 
+  /**
+   *
+   * @param user
+   * @returns
+   */
   public async generateJWT(user: UsersEntity): Promise<any> {
     const getUser = await this.usersServices.findUser(user.id);
 
